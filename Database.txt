@@ -1,0 +1,85 @@
+--DATA_SOURCE TABLE
+CREATE TABLE Data_Source(
+       SourceURL TEXT PRIMARY KEY,
+       Source_name TEXT
+       );
+---COUNTRY TABLE
+CREATE TABLE Country(
+       ISO_code TEXT PRIMARY KEY,
+       Country_name TEXT NOT NULL,
+       SourceURL TEXT,
+       FOREIGN KEY (SourceURL) REFERENCES Data_Source(SourceURL)
+       );
+
+--VACCINE TABLE
+CREATE TABLE Vaccine(
+       Vaccine_name TEXT PRIMARY KEY
+       );
+       
+--COUNTRY_VACCINE TABLE
+CREATE TABLE Country_Vaccine(
+       ISO_code TEXT NOT NULL,
+       Vaccine_name TEXT NOT NULL,
+       PRIMARY KEY (ISO_code, Vaccine_name),
+       FOREIGN KEY (ISO_code) REFERENCES Country(ISO_code),
+       FOREIGN KEY (Vaccine_name) REFERENCES Vaccine(Vaccine_name)
+       );
+
+--MANUFACTURER TABLE
+CREATE TABLE Manufacturer(
+       Manufacturer_name TEXT PRIMARY KEY
+       );
+
+--AGE_GROUP TABLE
+CREATE TABLE Age_Group(
+       Age_group TEXT PRIMARY KEY
+       );
+
+--STATE TABLE
+CREATE TABLE State(
+       State_name TEXT PRIMARY KEY,
+       ISO_code TEXT NOT NULL,
+       FOREIGN KEY (ISO_code) REFERENCES Country(ISO_code)
+);
+           
+--VACCINATION_RECORD TABLE
+CREATE TABLE Vaccination_Record(
+       Date TEXT NOT NULL,
+       ISO_code TEXT NOT NULL,
+       State_name TEXT,
+       Total_vaccinations INTEGER,
+       Daily_vaccinations INTEGER,
+       People_vaccinated INTEGER,
+       People_fully_vaccinated INTEGER,
+       Total_boosters INTEGER,
+       PRIMARY KEY (ISO_code, Date),
+       FOREIGN KEY(ISO_code) REFERENCES Country(ISO_code),
+       FOREIGN KEY(State_name) REFERENCES State(State_name)
+       );
+       
+
+       
+--AGE_GROUP_VACCINATION TABLE
+CREATE TABLE Age_Group_Vaccination(
+       Date TEXT NOT NULL,
+       ISO_code TEXT NOT NULL,
+       Age_group TEXT NOT NULL,
+       People_vaccinated_per_hundred REAL,
+       People_fully_vaccinated_per_hundred REAL,
+       PRIMARY KEY (ISO_code, Age_group, Date),
+       FOREIGN KEY (ISO_code) REFERENCES Country(ISO_code),
+       FOREIGN KEY (Age_group) REFERENCES Age_Group(Age_group)
+       );
+
+--MANUFACTURER VACCINATION TABLE
+CREATE TABLE Manufacturer_Vaccination(
+       Date TEXT NOT NULL,
+       ISO_code TEXT NOT NULL,
+       Manufacturer_name TEXT NOT NULL,
+       Total_vaccinations INTEGER,
+       PRIMARY KEY (ISO_code,Manufacturer_name, Date),
+       FOREIGN KEY(ISO_code) REFERENCES Country(ISO_code),
+       FOREIGN KEY(Manufacturer_name) REFERENCES Manufacturer(Manufacturer_name)
+       );     
+
+

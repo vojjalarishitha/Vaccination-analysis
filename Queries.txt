@@ -1,0 +1,71 @@
+-- Task D.1: Vaccine type daily vaccinations by country until December 2021
+SELECT 
+      c.Country_name As Country,
+      substr(mv.Date,1,4) AS OY,
+      substr(mv.Date,6,2) AS OM,
+      substr(mv.Date,9,2) AS OD,
+      mv.Manufacturer_name AS "Vaccine Type",
+      mv.Total_vaccinations -
+      COALESCE(
+          LAG(mv.Total_vaccinations) OVER (
+              PARTITION BY mv.ISO_code, mv.Manufacturer_name
+              ORDER BY mv.Date
+          ),
+          0
+      ) AS "Daily  Vaccinations"
+  FROM Manufacturer_Vaccination mv
+  JOIN Country c
+  ON mv.ISO_code = c.ISO_code
+  WHERE mv.Date <= '2021-12-31'
+  ORDER BY Country,OY,OM,OD, "Vaccine Type";
+
+
+
+--Task D.2: Weekly change in fully vaccinated people during  2021-2022
+SELECT
+  strftime('%Y',
+      date(
+           substr(vr.Date,length(vr.Date)-3,4) || '-' ||
+           printf('%02d', CAST(substr(substr(vr.Date, instr(vr.Date,'/')+1), 1, instr(substr(vr.Date, instr(vr.Date, '/')+1), '/')-1) AS INTEGER)) || '-' ||
+           printf('%02d', CAST(substr(vr.Date,1,instr(vr.Date,'/')-1) AS INTEGER))
+       )
+   ) AS OY,
+   
+   strftime('%W',
+      date(
+           substr(vr.Date,length(vr.Date)-3,4) || '-' ||
+           printf('%02d', CAST(substr(substr(vr.Date, instr(vr.Date,'/')+1), 1, instr(substr(vr.Date, instr(vr.Date, '/')+1), '/')-1) AS INTEGER)) || '-' ||
+           printf('%02d', CAST(substr(vr.Date,1,instr(vr.Date,'/')-1) AS INTEGER))
+       )
+   ) AS OW,
+   ds.Source_name || '(' || ds.SourceURL || ')' AS "Source Name (URL)",
+  
+  MAX(CASE WHEN c.Country_name='China' THEN vr.People_fully_vaccinated END) -
+  MIN(CASE WHEN c.Country_name='China' THEN vr.People_fully_vaccinated END) AS China,
+  
+  MAX(CASE WHEN c.Country_name='Chile' THEN vr.People_fully_vaccinated END) -
+  MIN(CASE WHEN c.Country_name='Chile' THEN vr.People_fully_vaccinated END) AS Chile,
+  
+  MAX(CASE WHEN c.Country_name='United States' THEN vr.People_fully_vaccinated END) -
+  MIN(CASE WHEN c.Country_name='United States' THEN vr.People_fully_vaccinated END) AS US,
+  
+  MAX(CASE WHEN c.Country_name='New Zealand' THEN vr.People_fully_vaccinated END) -
+  MIN(CASE WHEN c.Country_name='New Zealand' THEN vr.People_fully_vaccinated END) AS "New Zealand",
+  
+  MAX(CASE WHEN c.Country_name='Sweden' THEN vr.People_fully_vaccinated END) -
+  MIN(CASE WHEN c.Country_name='Sweden' THEN vr.People_fully_vaccinated END) AS "Sweden",
+  
+  MAX(CASE WHEN c.Country_name='Sri Lanka' THEN vr.People_fully_vaccinated END) -
+  MIN(CASE WHEN c.Country_name='Sri Lanka' THEN vr.People_fully_vaccinated END) AS "Sri Lanka"
+  
+FROM Vaccination_Record vr
+JOIN Country c ON vr.ISO_code = c.ISO_code
+JOIN Data_Source ds ON c.SourceURL = ds.SourceURL
+WHERE c.Country_name IN
+('China','Chile','United States','New Zealand','Sweden','Sri Lanka')
+AND substr(vr.Date, length(vr.Date)-3,4) IN('2021','2022')
+AND vr.People_fully_vaccinated IS NOT NULL
+GROUP BY OY,OW, ds.Source_name,ds.SourceURL
+ORDER BY OY,OW;
+
+
